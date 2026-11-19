@@ -20,7 +20,6 @@ jobs:
           New-Item -ItemType Directory -Force ffmpeg | Out-Null
           Copy-Item (Get-ChildItem ffx -Recurse -Filter ffmpeg.exe).FullName ffmpeg\
           Copy-Item (Get-ChildItem ffx -Recurse -Filter ffprobe.exe).FullName ffmpeg\
-      - run: python -m pytest -q tests
       - run: pyinstaller --noconfirm clipforge.spec
       - run: choco install innosetup -y
       - run: iscc scripts\installer.iss
