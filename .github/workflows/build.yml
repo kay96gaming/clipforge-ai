@@ -1,0 +1,30 @@
+name: build-windows-installer
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Download FFmpeg
+        shell: pwsh
+        run: |
+          Invoke-WebRequest https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip -OutFile ff.zip
+          Expand-Archive ff.zip ffx
+          New-Item -ItemType Directory -Force ffmpeg | Out-Null
+          Copy-Item (Get-ChildItem ffx -Recurse -Filter ffmpeg.exe).FullName ffmpeg\
+          Copy-Item (Get-ChildItem ffx -Recurse -Filter ffprobe.exe).FullName ffmpeg\
+      - run: python -m pytest -q tests
+      - run: pyinstaller --noconfirm clipforge.spec
+      - run: choco install innosetup -y
+      - run: iscc scripts\installer.iss
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CLIPFORGE_AI_Setup
+          path: dist/CLIPFORGE_AI_Setup.exe
